@@ -1,0 +1,9 @@
+void main()
+{
+   int n = readInt();
+   assert (n == 42);
+   char c = readChar();
+   assert (c == 'a');
+   c = readChar();
+   assert (c == 'b');
+}
