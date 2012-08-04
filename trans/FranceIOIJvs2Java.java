@@ -3,15 +3,16 @@ import java.io.*;
 
 public class FranceIOIJvs2Java
 {
-   // @bean
-   public FranceIOIJvs2Java() {}
-
-   public String translate(String jvsCode) {
+   // Translate a JVS code into a Java code
+   public static String translateJvsToJava(String jvsCode)
+   {
+      // TODO ; Loic : Why ? When does this append ?
       String text = jvsCode.replace((char) 160, ' ');
-      // Let's add
-      if(!text.replaceAll("[ \n\r\t]+", " ").matches(".*void[ ]+main[ ]*\\([ ]*\\).*"))
+
+      // Some verifications
+      if (!text.replaceAll("[ \n\r\t]+", " ").matches(".*void[ ]+main[ ]*\\([ ]*\\).*"))
       {
-         if(text.replaceAll("[ \n\r\t]+", " ").matches(".*main[ ]*\\([ ]*\\).*")) 
+         if (text.replaceAll("[ \n\r\t]+", " ").matches(".*main[ ]*\\([ ]*\\).*")) 
          {
             System.err.println("Attention: il faut mettre \"void\" devant \"main()\" pour que le programme puisque se compiler");
             text = text.replaceFirst("main[ ]*\\([ ]*\\)", "void main()");
@@ -24,45 +25,53 @@ public class FranceIOIJvs2Java
       }
       
       String[] lines = text.split("\n");
+      
       StringBuilder head = new StringBuilder();
       StringBuilder body = new StringBuilder();
       // Here is the translation loop
       {
-         int i = 1, nbRepeat = 0;
+         int nbRepeat = 0;
          // Copies the user's code
-         for(String line : lines) 
+         for (String line : lines) 
          {
-            if(line.matches("^\\s*(import|package)[^;]*;\\s*$")) 
+            // Try to deal with imports / packages
+            if (line.matches("^\\s*(import|package)[^;]*;\\s*$")) 
             {
                head.append(line);
                body.append("//").append(line).append("\n");
-               if(line.matches("^\\s*package[^;]*;\\s*$"))
-                  System.err.println("Attention: on ne peut normalement pas définir de package Java en JavaScool\n le programme risque de ne pas s'exécuter correctement");
+               if (line.matches("^\\s*package[^;]*;\\s*$"))
+                  System.err.println("Attention : on ne peut normalement pas définir de package Java en JavaScool\n le programme risque de ne pas s'exécuter correctement");
             }
+            // The "repeat" structure added to JVS
             else if (line.matches("^\\s*repeat[ ]*\\(\\s*.+\\s*\\).*")) 
             {
-               String finalVar = "__final_"+nbRepeat+"";
-               String loopVar = "__loop_"+nbRepeat+"";
-               String replace = "final int "+finalVar+" = ($1);for (int "+loopVar+" = 1 ; "+loopVar+" <= "+finalVar+" ; "+loopVar+"++ ) $2";
+               String finalVar = "__final_" + nbRepeat;
+               String loopVar = "__loop_" + nbRepeat;
+               String replace = "final int " + finalVar + " = ($1);for (int " + loopVar + " = 1 ; " + loopVar + " <= " + finalVar + " ; " + loopVar + "++ ) $2";
 
                line = line.replaceAll("^\\s*repeat[ ]*\\((.*)\\)\\s*(({.*)?)$", replace);
                body.append(line).append("\n");
                nbRepeat++;
             }
             else
+            {
                body.append(line).append("\n");
-            i++;
+            }
          }
          String finalBody = body.toString();
 
-         // Imports proglet's static methods
+         
+         // Imports needed Java's packages
+         head.append("import static java.util.Arrays.*;\n");
          head.append("import static java.lang.Math.*;\n");
+
+         // Imports Java's Cool static methods
          head.append("import static javascool.Stdout.*;\n");
          head.append("import static javascool.Stdin.*;\n");
-         head.append("import static java.util.Arrays.*;\n");
          head.append("import static javascool.Misc.*;\n");
          head.append("class Code {\n");
          
+         // TODO, temporary : the "robot" library should be automatically added when needed
          head.append("public static void bas()      { System.out.println(\"bas\"); }\n"); 
          head.append("public static void droite()   { System.out.println(\"droite\"); }\n"); 
          head.append("public static void gauche()   { System.out.println(\"gauche\"); }\n"); 
@@ -73,10 +82,11 @@ public class FranceIOIJvs2Java
          head.append("public static void deplacer(int indiceSrc, int indiceDst)   { System.out.println(\"deplacer\");System.out.println(indiceSrc);System.out.println(indiceDst); }\n"); 
          head.append("public static void transferer(int indiceSrc, int indiceDst) { System.out.println(\"transferer\");System.out.println(indiceSrc);System.out.println(indiceDst); }\n"); 
          head.append("public static void vider(int indice)                        { System.out.println(\"vider\");System.out.println(indice); }\n"); 
-   
+
          head.append(finalBody);
+
          head.append("}\n");
-         
+
          // Declares the proglet's core as a Runnable in the Applet
          head.append("class Main {\n");
          head.append("  public static void main(String[] arg) {\n");
@@ -89,31 +99,25 @@ public class FranceIOIJvs2Java
          head.append("   }\n");
          head.append("  }\n");
          head.append("}\n");
+
+         /*
+         System.err.println(
+                  "\n-------------------\nCode java généré\n-------------------\n" +
+                  head.toString().replaceAll("([{;])", "$1\n") + "\n" + finalBody + "}" +
+                  "\n----------------------------------------------------------\n"
+            );
+         */
       }
 
-      /*
-      System.err.println(
-               "\n-------------------\nCode java généré\n-------------------\n" +
-               head.toString().replaceAll("([{;])", "$1\n") + "\n" + finalBody + "}" +
-               "\n----------------------------------------------------------\n");
-      */
       return head.toString();
    }
 
-   public static void main(String[] usage)
+   public static String readFromFile(String fileName)
    {
-      // @main
-      if(usage.length != 2)
-      {
-         System.err.println("./prog JVS JAVA");
-         System.exit(3);
-      }
-      FranceIOIJvs2Java translator = new FranceIOIJvs2Java();
-      String text = new String();
-
+      String result = "";
       try
       {
-         FileReader fstream = new FileReader(usage[0]);
+         FileReader fstream = new FileReader(fileName);
          BufferedReader reader = new BufferedReader(fstream);
          StringBuilder buffer = new StringBuilder();
          char chars[] = new char[10240];
@@ -124,20 +128,23 @@ public class FranceIOIJvs2Java
                break;
             buffer.append(chars, 0, l);
          }
-         text = buffer.toString();
+         result = buffer.toString();
       }
       catch (Exception e)
       {
          System.err.println("Error: " + e.getMessage());
          System.exit(4);
       }
-        
-      text = translator.translate(text);
+      return result;
+   }
+
+   public static void writeToFile(String fileName, String content)
+   {
       try
       {
-         FileWriter fstream = new FileWriter(usage[1]);
+         FileWriter fstream = new FileWriter(fileName);
          BufferedWriter out = new BufferedWriter(fstream);
-         out.write(text);
+         out.write(content);
          out.close();
       }
       catch (Exception e)
@@ -145,5 +152,22 @@ public class FranceIOIJvs2Java
          System.err.println("Error: " + e.getMessage());
          System.exit(5);
       }
+   }
+
+   // @main
+   public static void main(String[] args)
+   {
+      if (args.length != 2)
+      {
+         System.err.println("The translator need two arguments.");
+         System.err.println("Usage :");
+         System.err.println("./prog inputJvsFile outputJavaFile");
+         System.exit(3);
+      }
+
+      String jvsCode = readFromFile(args[0]);
+      String javaCode = translateJvsToJava(jvsCode);
+
+      writeToFile(args[1], javaCode);
    }
 }
