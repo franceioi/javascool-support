@@ -6,4 +6,5 @@ void main()
    assert (c == 'a');
    c = readChar();
    assert (c == 'b');
+   println("Everything is good !");
 }
