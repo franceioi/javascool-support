@@ -3,8 +3,6 @@ import java.io.*;
 
 public class FranceIOIJvs2Java
 {
-   static String[] unSupportedFunctions = {"readBool", "readBoolean"};
-   
     // @bean
     public FranceIOIJvs2Java() {}
 
@@ -20,16 +18,7 @@ public class FranceIOIJvs2Java
             text = "\nvoid main() {\n" + text + "\n}\n";
           }
         }
-        //// Warnings ////
-        // Unsupported functions
-/*
-        for (String name : unSupportedFunctions)
-        {
-           String nameFull = name + "\\(";
-           if(text.replaceAll("[ \n\r\t]+", " ").matches(".*"+nameFull+".*"))
-              System.err.println("Attention : la fonction '" + name + "()' n'est pas supportée sur France-IOI. Ne pas l'utiliser.");
-        }
-*/        
+      
         String[] lines = text.split("\n");
         StringBuilder head = new StringBuilder();
         StringBuilder body = new StringBuilder();
