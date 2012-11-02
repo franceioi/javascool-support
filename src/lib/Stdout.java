@@ -12,6 +12,10 @@ public class Stdout {
     System.out.println(string);
   }
 
+  public static void println() {
+    System.out.println("\n");
+  }
+
   public static void println(int i) {
     println("" + i);
   }
