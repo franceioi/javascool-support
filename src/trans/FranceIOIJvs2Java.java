@@ -75,7 +75,7 @@ public class FranceIOIJvs2Java
          for(String libname : lib)
          {
             // FIXME BUG WARNING ERROR Scanner is a special one, don't do anything about it
-            if(libname.equals("Scanner"))
+            if (libname.equals("Scanner"))
                continue;
             // javascools standard library
             String prefix;
@@ -166,7 +166,7 @@ public class FranceIOIJvs2Java
       idx = libname.lastIndexOf('.');
       if(idx != -1)
          libname = libname.substring(0, idx);
-      System.err.println("Debug: extract lib name from " + file + ": " + libname);
+      //System.err.println("Debug: extract lib name from " + file + ": " + libname);
       return libname;
    }
 
