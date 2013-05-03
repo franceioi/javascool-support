@@ -1,10 +1,10 @@
 // compile with gcj --encoding=utf8 --main=FranceIOIJvs2Java -o FranceIOIJvs2Java FranceIOIJvs2Java.java
 import java.io.*;
+import java.util.*;
 
 public class FranceIOIJvs2Java
 {
-   // Translate a JVS code into a Java code
-   public static String translateJvsToJava(String jvsCode)
+   public static String translateJvsToJava(String jvsCode, List<String> lib) 
    {
       // TODO ; Loic : Why ? When does this append ?
       String text = jvsCode.replace((char) 160, ' ');
@@ -60,43 +60,46 @@ public class FranceIOIJvs2Java
          }
          String finalBody = body.toString();
 
-         
          // Imports needed Java's packages
          head.append("import static java.util.Arrays.*;\n");
          head.append("import static java.lang.Math.*;\n");
 
          // Imports Java's Cool static methods
+         /*
          head.append("import static javascool.Stdout.*;\n");
          head.append("import static javascool.Stdin.*;\n");
          head.append("import static javascool.Misc.*;\n");
+         */
+
+         // Add libs
+         for(String libname : lib)
+         {
+            // FIXME BUG WARNING ERROR Scanner is a special one, don't do anything about it
+            if(libname.equals("Scanner"))
+               continue;
+            // javascools standard library
+            String prefix;
+            if(libname.equals("Stdin") || libname.equals("Stdout") || libname.equals("Misc"))
+               prefix = "javascool";
+            else
+               prefix = "algorea";
+            head.append("import static " + prefix + "." + libname + ".*;\n");
+         }
+
          head.append("class Code {\n");
-         
-         // TODO, temporary : the "robot" library should be automatically added when needed
-         head.append("public static void bas()      { System.out.println(\"bas\"); }\n"); 
-         head.append("public static void droite()   { System.out.println(\"droite\"); }\n"); 
-         head.append("public static void gauche()   { System.out.println(\"gauche\"); }\n"); 
-         head.append("public static void haut()     { System.out.println(\"haut\"); }\n"); 
-         head.append("public static void deposer()  { System.out.println(\"deposer\"); }\n"); 
-         head.append("public static void ramasser() { System.out.println(\"ramasser\"); }\n"); 
-         head.append("public static void remplir(int indice)                      { System.out.println(\"remplir\");System.out.println(indice); }\n"); 
-         head.append("public static void deplacer(int indiceSrc, int indiceDst)   { System.out.println(\"deplacer\");System.out.println(indiceSrc);System.out.println(indiceDst); }\n"); 
-         head.append("public static void transferer(int indiceSrc, int indiceDst) { System.out.println(\"transferer\");System.out.println(indiceSrc);System.out.println(indiceDst); }\n"); 
-         head.append("public static void vider(int indice)                        { System.out.println(\"vider\");System.out.println(indice); }\n"); 
-
          head.append(finalBody);
-
          head.append("}\n");
 
          // Declares the proglet's core as a Runnable in the Applet
          head.append("class Main {\n");
          head.append("  public static void main(String[] arg) {\n");
-         head.append("   try{ Code c = new Code();c.main(); } catch(Throwable e) { \n");
-         head.append("    if (e.toString().matches(\".*Interrupted.*\"))\n");
-         head.append("      System.err.println(\"\\n-------------------\\nProggramme arrêté !\\n-------------------\\n\");\n");
-         head.append("    else\n");
-         head.append("      System.err.println(\"\\n-------------------\\nErreur lors de l'exécution de la proglet\\n\"+e+\"\\n-------------------\\n\");\n");
-         head.append("    System.exit(1);\n");
-         head.append("   }\n");
+         head.append("    try{ Code c = new Code();c.main(); } catch(Throwable e) { \n");
+         head.append("      if (e.toString().matches(\".*Interrupted.*\"))\n");
+         head.append("        System.err.println(\"\\n-------------------\\nProggramme arrêté !\\n-------------------\\n\");\n");
+         head.append("      else\n");
+         head.append("        System.err.println(\"\\n-------------------\\nErreur lors de l'exécution de la proglet\\n\"+e+\"\\n-------------------\\n\");\n");
+         head.append("      System.exit(1);\n");
+         head.append("    }\n");
          head.append("  }\n");
          head.append("}\n");
 
@@ -154,19 +157,37 @@ public class FranceIOIJvs2Java
       }
    }
 
+   public static String ExtractLibName(String file)
+   {
+      String libname = file;
+      int idx = libname.lastIndexOf('/');
+      if(idx != -1)
+         libname = libname.substring(idx + 1);
+      idx = libname.lastIndexOf('.');
+      if(idx != -1)
+         libname = libname.substring(0, idx);
+      System.err.println("Debug: extract lib name from " + file + ": " + libname);
+      return libname;
+   }
+
    // @main
    public static void main(String[] args)
    {
-      if (args.length != 2)
+      System.out.println("");
+      if (args.length < 2)
       {
-         System.err.println("The translator need two arguments.");
+         System.err.println("The translator need at least two arguments.");
          System.err.println("Usage :");
-         System.err.println("./prog inputJvsFile outputJavaFile");
+         System.err.println("./prog inputJvsFile outputJavaFile lib1 lib2...");
          System.exit(3);
       }
 
+      List<String> lib = new ArrayList<String>();
+      for(int i = 2; i < args.length; i++)
+         lib.add(ExtractLibName(args[i]));
+
       String jvsCode = readFromFile(args[0]);
-      String javaCode = translateJvsToJava(jvsCode);
+      String javaCode = translateJvsToJava(jvsCode, lib);
 
       writeToFile(args[1], javaCode);
    }
