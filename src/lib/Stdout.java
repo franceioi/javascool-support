@@ -13,7 +13,7 @@ public class Stdout {
   }
 
   public static void println() {
-    System.out.println("\n");
+    System.out.println();
   }
 
   public static void println(int i) {

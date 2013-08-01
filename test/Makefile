@@ -10,7 +10,7 @@ import:
 compile:
 	gcj --encoding=utf8 --main=FranceIOIJvs2Java -o FranceIOIJvs2Java ../src/trans/FranceIOIJvs2Java.java	
 
-	./FranceIOIJvs2Java Main.jvs Main.java
+	./FranceIOIJvs2Java Main.jvs Main.java Stdout Stdin Misc
 
 	gcj --encoding=utf8 --main=Main -o Main Main.java Scanner.java ../src/lib/*.java
 
